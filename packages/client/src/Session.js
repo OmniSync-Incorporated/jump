@@ -23,20 +23,27 @@ function SessionProvider ({client, children, SessionUser, Loading, popup = true}
     _setUser(user);
   }
 
-  useEffect(()=> {
+
+  const useEffectMethod = () => {
     const auth = Firebase.auth();
+    console.log(auth);
     const unsubscribe = auth.onAuthStateChanged(async (firebase_user)=> {
+      console.log(firebase_user);
       try {
         if (firebase_user) {
           const token = await firebase_user.getIdToken(true);
+          console.log("token",token)
           client.setToken(token);
+          console.log(SessionUser);
           const user = await SessionUser.load({client, token, firebase_user});
+          console.log("user",user)
           setUser(user);
         } else {
           client.clearToken();
           setUser(null);
         }
       } catch (error) {
+        console.log(error);
         const code = getGraphQLErrorCode(error);
         if (code) {
           setError(code);
@@ -51,9 +58,12 @@ function SessionProvider ({client, children, SessionUser, Loading, popup = true}
     return ()=> {
       unsubscribe();
     };
-  }, []);
+  }
+
+  // useEffect(useEffectMethod, []);
 
   async function start ({email, password, provider: provider_name}) {
+    console.log('args', {email, password, provider: provider_name});
     const auth = Firebase.auth();
     const provider_method = popup ? 'signInWithPopup' : 'signInWithRedirect';
     const dedicated_providers = ['Google', 'Facebook', 'Twitter', 'Github'];
@@ -90,7 +100,7 @@ function SessionProvider ({client, children, SessionUser, Loading, popup = true}
     } else {
       invalidMode();
     }
-
+    useEffectMethod();
     return result;
   }
 
